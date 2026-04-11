@@ -1319,9 +1319,10 @@
         }, 3000);
 
         // ========== MUSIC PLAYER — GAPLESS PLAYBACK ==========
-        // Gap cause: audio.load() resets + re-fetches before play, causing 2-3s silence.
-        // Fix: two Audio elements (A/B). While one plays, the other silently
-        // preloads the next track. On 'ended', instantly swap — zero gap.
+        // Strategy: one active player + one silent preloader.
+        // Preloader fetches the NEXT track in the background while current plays.
+        // On 'ended', set src (browser cache serves it instantly) + play. No load() calls.
+        // No A/B swap complexity — just two simple elements.
 
         const tracks = [
             'music1.mp3','music2.mp3','music3.mp3','music4.mp3',
@@ -1329,19 +1330,18 @@
         ];
 
         let currentTrack = 0;
-        let isMuted = false;
+        let isMuted      = false;
         let musicStarted = false;
 
-        // Two players — active and preloader swap roles each track
-        const playerA = new Audio();
-        const playerB = new Audio();
-        playerA.volume = 0.5;
-        playerB.volume = 0.5;
-        playerA.preload = 'auto';
-        playerB.preload = 'auto';
+        const audio = new Audio();
+        audio.volume  = 0.5;
+        audio.preload = 'auto';
 
-        let activePlayer   = playerA;
-        let preloadPlayer  = playerB;
+        // Silent preloader — loads next track into browser cache while current plays
+        const preloader = new Audio();
+        preloader.volume  = 0;
+        preloader.preload = 'auto';
+        preloader.muted   = true;
 
         function updateLabel(index) {
             document.getElementById('musicLabel').textContent = `Track ${index + 1} / 10`;
@@ -1349,50 +1349,33 @@
 
         function preloadNext(index) {
             const next = (index + 1) % tracks.length;
-            preloadPlayer.src    = tracks[next];
-            preloadPlayer.volume = isMuted ? 0 : 0.5;
-            preloadPlayer.load();
-        }
-
-        function onTrackEnded() {
-            currentTrack = (currentTrack + 1) % tracks.length;
-            updateLabel(currentTrack);
-
-            // Swap players
-            const temp    = activePlayer;
-            activePlayer  = preloadPlayer;
-            preloadPlayer = temp;
-
-            // Play the already-buffered next track instantly
-            activePlayer.volume = isMuted ? 0 : 0.5;
-            activePlayer.play().catch(() => {});
-
-            // Wire ended on the new active player
-            activePlayer.addEventListener('ended', onTrackEnded, { once: true });
-
-            // Start preloading the one after that
-            preloadNext(currentTrack);
+            preloader.src = tracks[next];
+            // Setting src on preload="auto" element triggers background fetch automatically
+            // No .load() needed — avoids resetting the active player
         }
 
         function startMusic() {
             if (musicStarted) return;
             musicStarted = true;
-
-            // Load and play track 0
-            activePlayer.src = tracks[0];
-            activePlayer.volume = 0.5;
-            activePlayer.play().catch(() => {});
-            activePlayer.addEventListener('ended', onTrackEnded, { once: true });
+            audio.src = tracks[0];
+            audio.play().catch(() => {});
             updateLabel(0);
-
-            // Immediately start preloading track 1
-            preloadNext(0);
+            // Start caching track 2 immediately
+            setTimeout(() => preloadNext(0), 500);
         }
+
+        // When a track ends — next file is already in browser cache, plays instantly
+        audio.addEventListener('ended', () => {
+            currentTrack = (currentTrack + 1) % tracks.length;
+            updateLabel(currentTrack);
+            audio.src = tracks[currentTrack];   // served from cache — near-zero gap
+            audio.play().catch(() => {});
+            preloadNext(currentTrack);           // cache the one after this
+        });
 
         document.getElementById('muteBtn').addEventListener('click', () => {
             isMuted = !isMuted;
-            activePlayer.muted  = isMuted;
-            preloadPlayer.muted = isMuted;
+            audio.muted = isMuted;
             document.getElementById('muteBtn').textContent = isMuted ? '🔇' : '🔊';
             document.getElementById('musicDisc').classList.toggle('paused', isMuted);
         });
