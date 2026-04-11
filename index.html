@@ -867,6 +867,69 @@
         ::-webkit-scrollbar-thumb:hover {
             background: rgba(232, 180, 184, 0.5);
         }
+
+        /* ========== COUNTDOWN POP-UP MESSAGES ========== */
+        #cdMessage {
+            position: fixed;
+            bottom: 6rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(30px);
+            z-index: 99999;
+            max-width: min(88vw, 360px);
+            background: rgba(26, 14, 30, 0.92);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(232, 180, 184, 0.35);
+            border-radius: 20px 20px 20px 4px;
+            padding: 1rem 1.3rem;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(232,180,184,0.08);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+        #cdMessage.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        .cdmsg-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .cdmsg-avatar {
+            width: 28px; height: 28px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--rose-gold), var(--deep-rose));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.75rem; font-weight: 700; color: var(--dark);
+            flex-shrink: 0;
+        }
+        .cdmsg-name {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--rose-gold);
+            letter-spacing: 0.04em;
+        }
+        .cdmsg-time {
+            font-size: 0.68rem;
+            color: rgba(255,255,255,0.3);
+            margin-left: auto;
+        }
+        .cdmsg-text {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(0.9rem, 2.5vw, 1rem);
+            font-style: italic;
+            color: rgba(255,255,255,0.9);
+            line-height: 1.6;
+        }
+        .cdmsg-tail {
+            position: absolute;
+            bottom: 10px; left: -8px;
+            width: 0; height: 0;
+            border-top: 8px solid transparent;
+            border-bottom: 8px solid transparent;
+            border-right: 10px solid rgba(26, 14, 30, 0.92);
+        }
     </style>
 </head>
 <body>
@@ -904,6 +967,17 @@
         </div>
         <p class="cd-date-note">April 12 · Four Years of Us 💕</p>
         <div class="cd-heart-pulse">💝</div>
+    </div>
+
+    <!-- Countdown pop-up messages -->
+    <div id="cdMessage">
+        <div class="cdmsg-tail"></div>
+        <div class="cdmsg-header">
+            <div class="cdmsg-avatar">B</div>
+            <span class="cdmsg-name">Balaji</span>
+            <span class="cdmsg-time" id="cdmsgTime"></span>
+        </div>
+        <p class="cdmsg-text" id="cdmsgText"></p>
     </div>
 
     <div id="musicPlayer">
@@ -1225,6 +1299,57 @@
                 updateCountdown();
             }
         }, 1000);
+
+        // ========== COUNTDOWN POP-UP MESSAGES ==========
+        const cdMessages = [
+            "I've been planning this for weeks just for you 🥺",
+            "Do you remember the first time you made me nervous? Still happens every day.",
+            "I checked this 100 times to make sure it was perfect. Because you deserve perfect.",
+            "4 years. And I'd choose you again in every single one. 💕",
+            "You're the reason I smile randomly at my phone.",
+            "Still can't believe I get to call you mine, Ammu 🌸",
+            "Every song playing right now reminds me of you somehow.",
+            "I started building this because words alone felt too small.",
+            "You have no idea how much I think about you every day.",
+            "My favourite thing? That you exist. That's literally it. 💝",
+            "I hope this makes you smile the way you make me smile.",
+            "Still counting every second until I get to be with you.",
+            "Nobody in this world gets me the way you do.",
+            "I made this whole thing just to say: I love you. That's it.",
+            "You're my home, Ammu. Wherever you are is where I want to be. 🏡",
+        ];
+
+        let cdMsgIndex = 0;
+        let cdMsgShown = false;
+
+        function showCdMessage() {
+            const overlay = document.getElementById('countdownOverlay');
+            // Don't show if countdown is already done
+            if (!overlay || overlay.classList.contains('hidden') || overlay.style.display === 'none') return;
+
+            const bubble   = document.getElementById('cdMessage');
+            const textEl   = document.getElementById('cdmsgText');
+            const timeEl   = document.getElementById('cdmsgTime');
+
+            // Pick next message (cycle)
+            textEl.textContent = cdMessages[cdMsgIndex % cdMessages.length];
+            cdMsgIndex++;
+
+            // Live time stamp
+            const now = new Date();
+            timeEl.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            // Show
+            bubble.classList.add('show');
+
+            // Hide after 7 seconds
+            setTimeout(() => bubble.classList.remove('show'), 7000);
+        }
+
+        // First message after 8 seconds so she settles in
+        setTimeout(showCdMessage, 8000);
+        // Then every 60 seconds
+        setInterval(showCdMessage, 60000);
 
         // ========== MUSIC PLAYER (WITH MOBILE AUDIO FIX) ==========
         const tracks = [
