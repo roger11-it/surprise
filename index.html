@@ -313,6 +313,45 @@
             animation: heartbeat 1.5s ease-in-out infinite;
         }
 
+        /* ========== COUNTDOWN MESSAGE TOAST ========== */
+        #cdMessage {
+            position: absolute;
+            bottom: 2.5rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: rgba(232, 180, 184, 0.1);
+            border: 1px solid rgba(232, 180, 184, 0.35);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 1rem 1.6rem;
+            max-width: min(420px, 88vw);
+            width: max-content;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.8s ease, transform 0.8s ease;
+            pointer-events: none;
+            z-index: 2;
+        }
+        #cdMessage.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        .cd-msg-emoji { font-size: 1.4rem; display: block; margin-bottom: 0.4rem; }
+        .cd-msg-text {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(0.85rem, 2.5vw, 1rem);
+            font-style: italic;
+            color: rgba(255, 255, 255, 0.88);
+            line-height: 1.6;
+        }
+        .cd-msg-from {
+            font-size: 0.72rem;
+            color: rgba(232, 180, 184, 0.7);
+            margin-top: 0.5rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
         .intro-message {
             text-align: center;
             max-width: 600px;
@@ -867,69 +906,6 @@
         ::-webkit-scrollbar-thumb:hover {
             background: rgba(232, 180, 184, 0.5);
         }
-
-        /* ========== COUNTDOWN POP-UP MESSAGES ========== */
-        #cdMessage {
-            position: fixed;
-            bottom: 6rem;
-            left: 50%;
-            transform: translateX(-50%) translateY(30px);
-            z-index: 99999;
-            max-width: min(88vw, 360px);
-            background: rgba(26, 14, 30, 0.92);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(232, 180, 184, 0.35);
-            border-radius: 20px 20px 20px 4px;
-            padding: 1rem 1.3rem;
-            box-shadow: 0 8px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(232,180,184,0.08);
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.5s ease, transform 0.5s ease;
-        }
-        #cdMessage.show {
-            opacity: 1;
-            transform: translateX(-50%) translateY(0);
-        }
-        .cdmsg-header {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 0.5rem;
-        }
-        .cdmsg-avatar {
-            width: 28px; height: 28px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--rose-gold), var(--deep-rose));
-            display: flex; align-items: center; justify-content: center;
-            font-size: 0.75rem; font-weight: 700; color: var(--dark);
-            flex-shrink: 0;
-        }
-        .cdmsg-name {
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: var(--rose-gold);
-            letter-spacing: 0.04em;
-        }
-        .cdmsg-time {
-            font-size: 0.68rem;
-            color: rgba(255,255,255,0.3);
-            margin-left: auto;
-        }
-        .cdmsg-text {
-            font-family: 'Playfair Display', serif;
-            font-size: clamp(0.9rem, 2.5vw, 1rem);
-            font-style: italic;
-            color: rgba(255,255,255,0.9);
-            line-height: 1.6;
-        }
-        .cdmsg-tail {
-            position: absolute;
-            bottom: 10px; left: -8px;
-            width: 0; height: 0;
-            border-top: 8px solid transparent;
-            border-bottom: 8px solid transparent;
-            border-right: 10px solid rgba(26, 14, 30, 0.92);
-        }
     </style>
 </head>
 <body>
@@ -967,17 +943,11 @@
         </div>
         <p class="cd-date-note">April 12 · Four Years of Us 💕</p>
         <div class="cd-heart-pulse">💝</div>
-    </div>
-
-    <!-- Countdown pop-up messages -->
-    <div id="cdMessage">
-        <div class="cdmsg-tail"></div>
-        <div class="cdmsg-header">
-            <div class="cdmsg-avatar">B</div>
-            <span class="cdmsg-name">Balaji</span>
-            <span class="cdmsg-time" id="cdmsgTime"></span>
+        <div id="cdMessage">
+            <span class="cd-msg-emoji" id="cdMsgEmoji">💌</span>
+            <p class="cd-msg-text" id="cdMsgText"></p>
+            <p class="cd-msg-from">— Balaji</p>
         </div>
-        <p class="cdmsg-text" id="cdmsgText"></p>
     </div>
 
     <div id="musicPlayer">
@@ -1300,92 +1270,121 @@
             }
         }, 1000);
 
-        // ========== COUNTDOWN POP-UP MESSAGES ==========
+        // ========== COUNTDOWN MESSAGES (every 15s) ==========
         const cdMessages = [
-            "I've been planning this for weeks just for you 🥺",
-            "Do you remember the first time you made me nervous? Still happens every day.",
-            "I checked this 100 times to make sure it was perfect. Because you deserve perfect.",
-            "4 years. And I'd choose you again in every single one. 💕",
-            "You're the reason I smile randomly at my phone.",
-            "Still can't believe I get to call you mine, Ammu 🌸",
-            "Every song playing right now reminds me of you somehow.",
-            "I started building this because words alone felt too small.",
-            "You have no idea how much I think about you every day.",
-            "My favourite thing? That you exist. That's literally it. 💝",
-            "I hope this makes you smile the way you make me smile.",
-            "Still counting every second until I get to be with you.",
-            "Nobody in this world gets me the way you do.",
-            "I made this whole thing just to say: I love you. That's it.",
-            "You're my home, Ammu. Wherever you are is where I want to be. 🏡",
+            { emoji: '💌', text: `I've been planning this for weeks just to see you smile.` },
+            { emoji: '🌙', text: `Every night I fall asleep thinking of you, Ammu.` },
+            { emoji: '✨', text: `Four years ago you made my whole world brighter. You still do, every single day.` },
+            { emoji: '🥺', text: `I literally cannot wait for you to see what's inside.` },
+            { emoji: '💕', text: `You are my person. My only person. Always.` },
+            { emoji: '☀️', text: `Even the boring days feel like something when you're in them.` },
+            { emoji: '🎁', text: `This isn't the gift. You are. I'm the lucky one here.` },
+            { emoji: '🫶', text: `I love you more today than I did yesterday. And less than I will tomorrow.` },
+            { emoji: '😌', text: `Just knowing you're reading this right now is making me smile like an idiot.` },
+            { emoji: '💍', text: `Four years down. Forever to go. And I'd pick you every single time.` },
+            { emoji: '🌸', text: `Remember the first time we laughed until it hurt? I think about that a lot.` },
+            { emoji: '🔐', text: `The countdown is almost over. And so is the waiting. I promise it's worth it.` },
         ];
 
         let cdMsgIndex = 0;
-        let cdMsgShown = false;
+        const cdMsgEl    = document.getElementById('cdMessage');
+        const cdMsgText  = document.getElementById('cdMsgText');
+        const cdMsgEmoji = document.getElementById('cdMsgEmoji');
 
-        function showCdMessage() {
-            const overlay = document.getElementById('countdownOverlay');
-            // Don't show if countdown is already done
-            if (!overlay || overlay.classList.contains('hidden') || overlay.style.display === 'none') return;
-
-            const bubble   = document.getElementById('cdMessage');
-            const textEl   = document.getElementById('cdmsgText');
-            const timeEl   = document.getElementById('cdmsgTime');
-
-            // Pick next message (cycle)
-            textEl.textContent = cdMessages[cdMsgIndex % cdMessages.length];
-            cdMsgIndex++;
-
-            // Live time stamp
-            const now = new Date();
-            timeEl.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-            // Show
-            bubble.classList.add('show');
-
-            // Hide after 7 seconds
-            setTimeout(() => bubble.classList.remove('show'), 7000);
+        function showNextCdMessage() {
+            // Fade out
+            cdMsgEl.classList.remove('show');
+            setTimeout(() => {
+                const msg = cdMessages[cdMsgIndex % cdMessages.length];
+                cdMsgText.textContent  = msg.text;
+                cdMsgEmoji.textContent = msg.emoji;
+                cdMsgIndex++;
+                // Fade in
+                cdMsgEl.classList.add('show');
+            }, 800);
         }
 
-        // First message after 8 seconds so she settles in
-        setTimeout(showCdMessage, 8000);
-        // Then every 60 seconds
-        setInterval(showCdMessage, 60000);
+        // Show first message after 3s, then every 15s
+        setTimeout(() => {
+            showNextCdMessage();
+            setInterval(showNextCdMessage, 15000);
+        }, 3000);
 
-        // ========== MUSIC PLAYER (WITH MOBILE AUDIO FIX) ==========
+        // ========== MUSIC PLAYER — GAPLESS PLAYBACK ==========
+        // Gap cause: audio.load() resets + re-fetches before play, causing 2-3s silence.
+        // Fix: two Audio elements (A/B). While one plays, the other silently
+        // preloads the next track. On 'ended', instantly swap — zero gap.
+
         const tracks = [
             'music1.mp3','music2.mp3','music3.mp3','music4.mp3',
             'music5.mp3','music6.mp3','music7.mp3','music8.mp3','music9.mp3','music10.mp3'
         ];
-        
+
         let currentTrack = 0;
         let isMuted = false;
         let musicStarted = false;
 
-        const audio = new Audio();
-        audio.volume = 0.5;
+        // Two players — active and preloader swap roles each track
+        const playerA = new Audio();
+        const playerB = new Audio();
+        playerA.volume = 0.5;
+        playerB.volume = 0.5;
+        playerA.preload = 'auto';
+        playerB.preload = 'auto';
 
-        function loadTrack(index) {
-            audio.src = tracks[index];
-            audio.load();
+        let activePlayer   = playerA;
+        let preloadPlayer  = playerB;
+
+        function updateLabel(index) {
             document.getElementById('musicLabel').textContent = `Track ${index + 1} / 10`;
+        }
+
+        function preloadNext(index) {
+            const next = (index + 1) % tracks.length;
+            preloadPlayer.src    = tracks[next];
+            preloadPlayer.volume = isMuted ? 0 : 0.5;
+            preloadPlayer.load();
+        }
+
+        function onTrackEnded() {
+            currentTrack = (currentTrack + 1) % tracks.length;
+            updateLabel(currentTrack);
+
+            // Swap players
+            const temp    = activePlayer;
+            activePlayer  = preloadPlayer;
+            preloadPlayer = temp;
+
+            // Play the already-buffered next track instantly
+            activePlayer.volume = isMuted ? 0 : 0.5;
+            activePlayer.play().catch(() => {});
+
+            // Wire ended on the new active player
+            activePlayer.addEventListener('ended', onTrackEnded, { once: true });
+
+            // Start preloading the one after that
+            preloadNext(currentTrack);
         }
 
         function startMusic() {
             if (musicStarted) return;
             musicStarted = true;
-            loadTrack(currentTrack);
-            audio.play().catch(e => console.log("Audio waiting for touch..."));
-        }
 
-        audio.addEventListener('ended', () => {
-            currentTrack = (currentTrack + 1) % tracks.length;
-            loadTrack(currentTrack);
-            audio.play().catch(() => {});
-        });
+            // Load and play track 0
+            activePlayer.src = tracks[0];
+            activePlayer.volume = 0.5;
+            activePlayer.play().catch(() => {});
+            activePlayer.addEventListener('ended', onTrackEnded, { once: true });
+            updateLabel(0);
+
+            // Immediately start preloading track 1
+            preloadNext(0);
+        }
 
         document.getElementById('muteBtn').addEventListener('click', () => {
             isMuted = !isMuted;
-            audio.muted = isMuted;
+            activePlayer.muted  = isMuted;
+            preloadPlayer.muted = isMuted;
             document.getElementById('muteBtn').textContent = isMuted ? '🔇' : '🔊';
             document.getElementById('musicDisc').classList.toggle('paused', isMuted);
         });
