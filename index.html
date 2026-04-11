@@ -906,9 +906,102 @@
         ::-webkit-scrollbar-thumb:hover {
             background: rgba(232, 180, 184, 0.5);
         }
+
+        /* ========== LIVE MESSAGE FROM BALAJI ========== */
+        #liveMessagePopup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.85);
+            z-index: 999999;
+            background: linear-gradient(135deg, rgba(26,10,40,0.97), rgba(15,15,35,0.97));
+            border: 1px solid rgba(232, 180, 184, 0.5);
+            border-radius: 24px;
+            padding: 2rem 2.2rem;
+            max-width: min(420px, 88vw);
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 0 60px rgba(232,180,184,0.25), 0 20px 60px rgba(0,0,0,0.6);
+            backdrop-filter: blur(30px);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+        #liveMessagePopup.show {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+            pointer-events: all;
+        }
+        .lmp-tag {
+            font-size: 0.72rem;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--rose-gold);
+            margin-bottom: 0.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .lmp-tag::before, .lmp-tag::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(232,180,184,0.3);
+        }
+        .lmp-emoji { font-size: 2.2rem; display: block; margin-bottom: 0.8rem; }
+        .lmp-text {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(1rem, 3vw, 1.25rem);
+            font-style: italic;
+            color: rgba(255,255,255,0.92);
+            line-height: 1.7;
+            margin-bottom: 1.2rem;
+        }
+        .lmp-from {
+            font-size: 0.8rem;
+            color: rgba(232,180,184,0.7);
+            letter-spacing: 0.08em;
+            margin-bottom: 1.4rem;
+        }
+        .lmp-close {
+            background: rgba(232,180,184,0.12);
+            border: 1px solid rgba(232,180,184,0.3);
+            color: var(--rose-gold);
+            border-radius: 50px;
+            padding: 0.55rem 1.8rem;
+            font-size: 0.85rem;
+            font-family: 'Poppins', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            letter-spacing: 0.05em;
+        }
+        .lmp-close:hover { background: rgba(232,180,184,0.22); transform: translateY(-2px); }
+        .lmp-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 999998;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+        .lmp-backdrop.show { opacity: 1; pointer-events: all; }
     </style>
 </head>
 <body>
+
+    <!-- Live message backdrop -->
+    <div class="lmp-backdrop" id="lmpBackdrop"></div>
+
+    <!-- Live message popup -->
+    <div id="liveMessagePopup">
+        <div class="lmp-tag">💌 Live from Balaji</div>
+        <span class="lmp-emoji" id="lmpEmoji">💕</span>
+        <p class="lmp-text" id="lmpText"></p>
+        <p class="lmp-from">— Balaji</p>
+        <button class="lmp-close" id="lmpClose">Close 💕</button>
+    </div>
 
     <div id="welcomeOverlay">
         <h1 class="welcome-title">HIII KUTTTY ❤️</h1>
@@ -1849,6 +1942,60 @@
                 letterModal.classList.remove('active');
             }
         });
+
+        // ========== LIVE MESSAGES FROM BALAJI (Firebase) ==========
+        // Replace the config below with YOUR Firebase project config
+        const firebaseConfig = {
+  apiKey: "AIzaSyBry0ij4erRhkvmb9kOzCslCehMPQh9IIE",
+  authDomain: "anniversary-project-35f58.firebaseapp.com",
+  databaseURL: "https://anniversary-project-35f58-default-rtdb.firebaseio.com",
+  projectId: "anniversary-project-35f58",
+  storageBucket: "anniversary-project-35f58.firebasestorage.app",
+  messagingSenderId: "700971613651",
+  appId: "1:700971613651:web:51e5802f89eef5a079c326",
+  measurementId: "G-906L8QNY5X"
+};
+
+        // Only init if config is filled in
+        if (!firebaseConfig.apiKey.includes('PASTE')) {
+            const fbScript = document.createElement('script');
+            fbScript.type = 'module';
+            fbScript.textContent = `
+                import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+                import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+                const app = initializeApp(${JSON.stringify(firebaseConfig)});
+                const db  = getDatabase(app);
+                const msgRef = ref(db, 'liveMessage');
+
+                let lastTimestamp = Date.now();
+
+                onValue(msgRef, (snapshot) => {
+                    const data = snapshot.val();
+                    if (!data) return;
+                    // Only show NEW messages (not old ones on page load)
+                    if (data.timestamp && data.timestamp <= lastTimestamp) return;
+                    lastTimestamp = data.timestamp;
+
+                    // Show popup
+                    document.getElementById('lmpEmoji').textContent = data.emoji || '💕';
+                    document.getElementById('lmpText').textContent  = data.text  || '';
+                    document.getElementById('liveMessagePopup').classList.add('show');
+                    document.getElementById('lmpBackdrop').classList.add('show');
+                });
+            `;
+            document.head.appendChild(fbScript);
+
+            const lmpClose    = document.getElementById('lmpClose');
+            const lmpBackdrop = document.getElementById('lmpBackdrop');
+
+            function closeLiveMsg() {
+                document.getElementById('liveMessagePopup').classList.remove('show');
+                document.getElementById('lmpBackdrop').classList.remove('show');
+            }
+            lmpClose.addEventListener('click', closeLiveMsg);
+            lmpBackdrop.addEventListener('click', closeLiveMsg);
+        }
     </script>
 </body>
 </html>
